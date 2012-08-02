@@ -11,9 +11,14 @@ class TimeLapsing:
 		self.sourceDir = "."
 		self.configDir = "~/.config/timelapsing"
 		self.options = None
+		self.fileSequenceName = "filesequence.txt"
+		self.movieName = "timelapse.avi"
+	
+	def allFiles(self):
+		return filter(lambda f: f.endswith(".jpg"), os.listdir(self.sourceDir))
 
 	def convertAll(self):
-		files = filter(lambda f: f.endswith(".jpg"), os.listdir(self.sourceDir))
+		files = self.allFiles()
 		sys.stdout.write("Converting %s images" % len(files))
 		for f in files:
 			self.convertSingle(f, os.path.join(self.destDir, f))
@@ -55,12 +60,32 @@ class TimeLapsing:
 		if success == 0:
 			subprocess.call(["eog", tmpfile.name])
 		tmpfile.close()
+
+	def createImageSequence(self):
+		files = self.allFiles()
+		files.sort()
+		with open(os.path.join(self.sourceDir, self.fileSequenceName), "w") as f:
+			f.writelines(files)
+	
+	def createMovie(self, hq=False):
+		args = ["mencoder"]
+		if hq:
+			args.extend(["-ovc", "x264", "-x264encopts", "preset=veryslow:tune=film:crf=15:frameref=15:fast_pskip=0:threads=auto"])
+		else:
+			args.extend(["-ovc", "lavc", "-lavcopts", "vcodec=mpeg4:mbd=2:trell:autoaspect:vqscale=3"])
+		args.extend(["-nosound", 
+				"-mf", "type=jpeg:fps=20",
+				"-o", self.movieName, 
+				"mf://@%s" % self.fileSequenceName])
+		subprocess.call(args)
 	
 	def run(self):
 		self.testForConvertParameters()
 		self.destDir = os.path.join(self.sourceDir, "converted")
 		os.mkdir(self.destDir)
 		self.convertAll()
+		self.createImageSequence()
+		self.createMovie()
 
 
 parser = argparse.ArgumentParser()
