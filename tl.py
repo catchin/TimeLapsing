@@ -6,25 +6,28 @@ import os
 from os import path
 import argparse
 
-class TimeLapseCatchin:
+class TimeLapsing:
 	def __init__(self):
 		self.sourceDir = "."
+		self.configDir = "~/.config/timelapsing"
+		self.options = None
 
-	def convertAll(self, options):
-		print("Converting images...")
-		files = filter(endswith(".jpg"), os.listdir(self.sourceDir))
+	def convertAll(self):
+		files = filter(lambda f: f.endswith(".jpg"), os.listdir(self.sourceDir))
+		sys.stdout.write("Converting %s images" % len(files))
 		for f in files:
-			self.convertSingle(f, os.path.join(self.destDir, f), options)
+			self.convertSingle(f, os.path.join(self.destDir, f))
 			sys.stdout.write(".")
+			sys.stdout.flush()
 		print("done")
 
-	def convertSingle(self, img, outimg, options):
+	def convertSingle(self, img, outimg):
 		args = ["convert"]
-		args.extend(options)
+		args.extend(self.options)
 		args.extend([img, outimg])
 		return subprocess.call(args)
 
-	def testForConvertParameters(self, img=None, options=None):
+	def testForConvertParameters(self, img=None):
 		print("Enter the conversion you want to do.\n" \
 				"Examples:\n" \
 				" -crop 2144x1206+0+109 +repage -scale 1920x1080\n" \
@@ -42,30 +45,29 @@ class TimeLapseCatchin:
 			sys.stdout.write("=> ")
 			readline = sys.stdin.readline().strip()
 			if len(readline) == 0:
-				return options
-			options = readline.split(" ")
-			self.testConvert(img, options)
+				break
+			self.options = readline.split(" ")
+			self.testConvert(img)
 
-	def testConvert(self, img, options):
+	def testConvert(self, img):
 		tmpfile = tempfile.NamedTemporaryFile(suffix=".jpg")
-		success = self.convertSingle(os.path.join(self.sourceDir,img), tmpfile.name, options)
+		success = self.convertSingle(os.path.join(self.sourceDir,img), tmpfile.name)
 		if success == 0:
 			subprocess.call(["eog", tmpfile.name])
 		tmpfile.close()
 	
 	def run(self):
-		options = self.testForConvertParameters()
-		self.convertAll()
+		self.testForConvertParameters()
 		self.destDir = os.path.join(self.sourceDir, "converted")
 		os.mkdir(self.destDir)
-		convertAll(options)
+		self.convertAll()
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--source", type=str, help="directory where all time lapse images are")
 args = parser.parse_args()
 
-tl = TimeLapseCatchin()
+tl = TimeLapsing()
 if args.source:
 	tl.sourceDir = args.source
 
