@@ -1,4 +1,20 @@
 #!/usr/bin/python
+# TimeLapsing
+# Copyright (C) 2012  Fabian Kneissl <fabian@kneissl-web.net>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 import tempfile
 import subprocess
 import sys
@@ -23,7 +39,9 @@ class TimeLapsing:
 		self.movieName = "timelapse.avi"
 	
 	def allFiles(self):
-		return filter(lambda f: f.endswith(".jpg"), os.listdir(self.sourceDir))
+		files = filter(lambda f: f.endswith(".jpg"), os.listdir(self.sourceDir))
+		files.sort()
+		return files
 
 	def convertAll(self):
 		files = self.allFiles()
@@ -56,10 +74,7 @@ class TimeLapsing:
 				"Enter a blank line when you are satisfied with the output image.\n")
 
 		if img == None:
-			for files in os.listdir(self.sourceDir):
-				if files.endswith(".jpg"):
-					img = files
-					break
+			img = self.allFiles()[0]
 		while True:
 			sys.stdout.write("=> ")
 			readline = sys.stdin.readline().strip()
@@ -77,7 +92,6 @@ class TimeLapsing:
 
 	def createImageSequence(self):
 		files = self.allFiles()
-		files.sort()
 		filename = os.path.join(self.sourceDir, self.fileSequenceName)
 		if self.confirm("Overwrite image sequence file", filename):
 			with open(filename, "w") as f:
@@ -127,6 +141,11 @@ class TimeLapsing:
 		if self.isCreateMovie:
 			self.createMovie()
 
+print '''TimeLapsing  Copyright (C) 2012  Fabian Kneissl <fabian@kneissl-web.net>
+This program comes with ABSOLUTELY NO WARRANTY; for details see LICENSE.txt.
+This is free software, and you are welcome to redistribute it
+under certain conditions; for details see LICENSE.txt.
+'''
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-o", "--overwrite", action="store_true", help="overwrite files without notice")
