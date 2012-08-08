@@ -30,6 +30,7 @@ class TimeLapsing:
 		else:
 			self.isConvertImages = args.convert
 			self.isCreateMovie = args.movie
+		self.fps = args.fps
 		self.isHQMovie = args.hq
 		self.sourceDir = args.source
 		self.overwrite = args.overwrite
@@ -106,7 +107,7 @@ class TimeLapsing:
 			else:
 				args.extend(["-ovc", "lavc", "-lavcopts", "vcodec=mpeg4:mbd=2:trell:autoaspect:vqscale=3"])
 			args.extend(["-nosound", 
-					"-mf", "type=jpeg:fps=20",
+					"-mf", "type=jpeg:fps=%s" % self.fps,
 					"-o", filename, 
 					"mf://@%s" % os.path.join(self.sourceDir, self.fileSequenceName)])
 			subprocess.call(args)
@@ -151,6 +152,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-o", "--overwrite", action="store_true", help="overwrite files without notice")
 parser.add_argument("-s", "--source", type=str, default=".", help="directory where all time lapse images are")
 parser.add_argument("-hq", action="store_true", help="create the movie in high quality (slower)")
+parser.add_argument("-fps", type=int, default=20, help="the frames per second the movie should have")
 group = parser.add_mutually_exclusive_group()
 group.add_argument("-c", "--convert", action="store_true", help="convert images and create sequence file")
 group.add_argument("-m", "--movie", action="store_true", help="create a movie from sequence file")
