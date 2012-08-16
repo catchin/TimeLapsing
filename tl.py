@@ -19,6 +19,7 @@ import tempfile
 import subprocess
 import sys
 import os
+import re
 from os import path
 import argparse
 
@@ -68,16 +69,25 @@ class TimeLapsing:
 		return subprocess.call(args)
 
 	def testForConvertParameters(self, img=None):
-		print("Enter the conversion you want to do.\n" \
-				"Examples:\n" \
-				" -crop 2144x1206+0+109 +repage -scale 1920x1080\n" \
-				" -crop 2144x1206+0+109 +repage -scale 1920x1080 -level 3,95\n" \
-				" -rotate 2.0 -crop 2087x1174+42+84 +repage -scale 1920x1080\n" \
-				" -crop 3216x1809+0+50 +repage -scale 1920x1080\n\n" \
-				"Enter a blank line when you are satisfied with the output image.\n")
-
 		if img == None:
 			img = self.allFiles()[0]
+		imgWidth = int(re.search("[0-9]+", subprocess.check_output(["identify", "-format", "'%w'", img])).group(0))
+		imgHeight = int(re.search("[0-9]+", subprocess.check_output(["identify", "-format", "'%h'", img])).group(0))
+		print("Your input image has dimensions %sx%s.\n" % (imgWidth, imgHeight))
+		aspect = 16.0/9
+		maxImgWidth = int(min(imgWidth, imgHeight * aspect))
+		maxImgHeight = int(min(imgHeight, imgWidth / aspect))
+		suggestedCrop = "%sx%s+%s+%s" % (maxImgWidth, maxImgHeight, 
+				abs(maxImgWidth-imgWidth)/2,
+				abs(maxImgHeight-imgHeight)/2)
+		print("Enter the conversion you want to do.\n" \
+				"Examples:\n" \
+				" -crop %s +repage -scale 1920x1080\n" \
+				" -crop %s +repage -scale 1920x1080 -level 3,95\n" \
+				" -rotate 2.0 -crop 2087x1174+42+84 +repage -scale 1920x1080\n\n" \
+				"Enter a blank line when you are satisfied with the output image.\n" %
+				(suggestedCrop, suggestedCrop))
+
 		while True:
 			sys.stdout.write("=> ")
 			readline = sys.stdin.readline().strip()
