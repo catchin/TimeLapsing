@@ -48,13 +48,15 @@ class TimeLapsing:
 		files = self.allFiles()
 		sys.stdout.write("Converting %s images" % len(files))
 		overwrite = None
+		if self.overwrite:
+			overwrite = True
 		for f in files:
 			destFile = os.path.join(self.destDir, f)
-			if not os.path.exists(destFile) or self.overwrite or overwrite:
-				self.convertSingle(f, destFile)
-			elif overwrite == None:
-				sys.stdout.write("\n")
+			pathExists = os.path.exists(destFile)
+			if overwrite == None and pathExists:
 				overwrite = self.confirm("Overwrite existing images")
+			if overwrite:
+				self.convertSingle(f, destFile)
 			sys.stdout.write(".")
 			sys.stdout.flush()
 		print("done")
