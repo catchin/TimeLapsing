@@ -54,9 +54,11 @@ class TimeLapsing:
 		for f in files:
 			destFile = os.path.join(self.destDir, f)
 			pathExists = os.path.exists(destFile)
-			if overwrite == None and pathExists:
+			write = not pathExists or overwrite
+			if pathExists and overwrite == None:
 				overwrite = self.confirm("Overwrite existing images")
-			if overwrite:
+				write = overwrite
+			if write:
 				self.convertSingle(f, destFile)
 			sys.stdout.write(".")
 			sys.stdout.flush()
